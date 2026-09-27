@@ -27,6 +27,17 @@ The static demo account above also remains available. The frontend validates req
 
 Authentication is intended for local demonstration: session tokens are stored in browser storage, user records are stored in a local JSON file, and there is no email verification, password recovery, or production session management. Do not deploy it as production authentication.
 
+## Vercel deployment
+
+Vercel serves the API through the functions in `api/`; the standalone Express server is for local development. The static demo account can sign in without extra services. To make signup and registered-account login persist across Vercel function invocations, create an Upstash Redis database and add these project environment variables in Vercel:
+
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+
+Redeploy after adding the variables. Accounts saved in local `server/data/users.json` are not automatically copied to Upstash; users must register again on the deployed app.
+
+If the deployment URL redirects to `vercel.com/login` before Daymark loads, disable or adjust **Deployment Protection** for the production deployment in the Vercel project settings. That Vercel access gate is separate from this app's login form.
+
 ## Tests
 
 ```sh
