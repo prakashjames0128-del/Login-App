@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { scryptSync } from 'node:crypto'
 import test from 'node:test'
 import { createApp } from './index.js'
-import { handleVercelLogin, handleVercelSignup } from './vercel-auth.js'
+import { handleVercelLogin, handleVercelSignup } from './vercel-auth-upstash.js'
 
 function mockResponse() {
     return {
@@ -115,8 +115,8 @@ test('the documented static demo account still signs in', async () => {
 })
 
 test('Vercel handlers accept demo login and use durable Redis when configured', async () => {
-    const previousUrl = process.env.UPSTASH_REDIS_REST_URL
-    const previousToken = process.env.UPSTASH_REDIS_REST_TOKEN
+    const previousUrl = process.env.UPSTASH_REDIS_REST_KV_REST_API_URL
+    const previousToken = process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN
     const originalFetch = globalThis.fetch
     const savedUsers = new Map()
     const salt = 'test-salt'
@@ -128,8 +128,8 @@ test('Vercel handlers accept demo login and use durable Redis when configured', 
     }
 
     try {
-        delete process.env.UPSTASH_REDIS_REST_URL
-        delete process.env.UPSTASH_REDIS_REST_TOKEN
+        delete process.env.UPSTASH_REDIS_REST_KV_REST_API_URL
+        delete process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN
         const demoResponse = mockResponse()
         await handleVercelLogin({ method: 'POST', body: { email: 'hello@daymark.app', password: 'daymark2026' } }, demoResponse)
         assert.equal(demoResponse.statusCode, 200)
@@ -142,8 +142,8 @@ test('Vercel handlers accept demo login and use durable Redis when configured', 
         await handleVercelSignup({ method: 'POST', body: { name: 'Member', email: 'member@example.com', password: 'correct-horse-42' } }, signupWithoutStorage)
         assert.equal(signupWithoutStorage.statusCode, 503)
 
-        process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.test'
-        process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token'
+        process.env.UPSTASH_REDIS_REST_KV_REST_API_URL = 'https://redis.example.test'
+        process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN = 'test-token'
         globalThis.fetch = async (_url, options) => {
             const [[command, key, value, nx]] = JSON.parse(options.body)
             if (command === 'SET') {
@@ -169,9 +169,9 @@ test('Vercel handlers accept demo login and use durable Redis when configured', 
         assert.equal(duplicateResponse.statusCode, 409)
     } finally {
         globalThis.fetch = originalFetch
-        if (previousUrl === undefined) delete process.env.UPSTASH_REDIS_REST_URL
-        else process.env.UPSTASH_REDIS_REST_URL = previousUrl
-        if (previousToken === undefined) delete process.env.UPSTASH_REDIS_REST_TOKEN
-        else process.env.UPSTASH_REDIS_REST_TOKEN = previousToken
+        if (previousUrl === undefined) delete process.env.UPSTASH_REDIS_REST_KV_REST_API_URL
+        else process.env.UPSTASH_REDIS_REST_KV_REST_API_URL = previousUrl
+        if (previousToken === undefined) delete process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN
+        else process.env.UPSTASH_REDIS_REST_KV_REST_API_TOKEN = previousToken
     }
 })
